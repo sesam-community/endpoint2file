@@ -1,37 +1,37 @@
-# xml-exporter
-[![Build Status](https://travis-ci.org/sesam-community/xml-exporter.svg?branch=master)](https://travis-ci.org/sesam-community/xml-exporter)
+# endpoint2file (experimental)
+[![Build Status](https://travis-ci.org/sesam-community/endpoint2file.svg?branch=master)](https://travis-ci.org/sesam-community/endpoint2file)
 
-xml-exporter is a microservice for exporting an XML byte stream from a sesam xml_endpoint to disk.
+A micro-service for reading a byte stream from a sesam node endpoint and writing it to a file.
 
 ## Environment variables
 
 `BANENOR_LINES` - a space seprarated list of all lines to be exported (ex: "B01 B02...")
 
-`XML_EXPORTER_ENDPOINT` - relative url to the sesam node xml_endpoint
+`SESAM_ENDPOINT2FILE_ENDPOINT` - relative url to the sesam node endpoint
 
-`XML_EXPORTER_SCHEDULE` - seconds between each run of the micro service
+`SESAM_ENDPOINT2FILE_SCHEDULE` - seconds between each run of the micro service
 
-`XML_EXPORTER_TARGET_FILENAME` - target filename of exported xml
+`SESAM_ENDPOINT2FILE_TARGET_FILENAME` - target filename
 
-`XML_EXPORTER_TARGET_FILENAME_EXT` - target file extension
+`SESAM_ENDPOINT2FILE_TARGET_FILE_EXT` - target file extension
 
-`XML_EXPORTER_TARGET_PATH` - target fileshare path
+`SESAM_ENDPOINT2FILE_TARGET_PATH` - target path
 
 ## Example System Config
 ```
 {
-  "_id": "xml-exporter-service",
+  "_id": "xml-endpoint2file-service",
   "type": "system:microservice",
   "docker": {
     "environment": {
       "BANENOR_LINES": "B01 B02 B03",
-      "XML_EXPORTER_ENDPOINT": "/api/publishers/railml/xml",
-      "XML_EXPORTER_SCHEDULE": 1209600
-      "XML_EXPORTER_TARGET_FILENAME": "railml2.3nor",
-      "XML_EXPORTER_TARGET_FILENAME_EXT": "xml",
-      "XML_EXPORTER_TARGET_PATH": "railml/"
+      "SESAM_ENDPOINT2FILE_ENDPOINT": "/api/publishers/railml/xml",
+      "SESAM_ENDPOINT2FILE_SCHEDULE": 1209600
+      "SESAM_ENDPOINT2FILE_TARGET_FILENAME": "railml2.3nor",
+      "SESAM_ENDPOINT2FILE_TARGET_FILE_EXT": "xml",
+      "SESAM_ENDPOINT2FILE_TARGET_PATH": "railml/"
     },
-    "image": "sesamcommunity/xml-exporter:latest",
+    "image": "sesamcommunity/endpoint2file:latest",
     "port": 5000
   }
 }
