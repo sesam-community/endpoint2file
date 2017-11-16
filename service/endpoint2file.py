@@ -16,16 +16,16 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 jwt = os.environ.get('JWT')
 node = os.environ.get('NODE') # ex: "ac6f6566.sesam.cloud"
 lines = os.environ.get('BANENOR_LINES') # expects a space separated list of lines ("B01 B02 B03 ...")
-endpoint = os.environ.get('SESAM_ENDPOINT2FILE_ENDPOINT') # ex: "/api/publishers/report-1-endpoint/csv"
-target_path  = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_PATH') # ex: "railml/"
-target_filename = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILENAME') # ex: "report-1"
-target_filename_ext = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILE_EXT') # ex: "csv"
+endpoint = os.environ.get('SESAM_ENDPOINT2FILE_ENDPOINT') # ex: "/api/publishers/railml/xml"
+target_path = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_PATH') # ex: "railml/"
+target_filename = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILENAME') # ex: "railml2.3nor"
+target_filename_ext = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILE_EXT') # ex: "xml"
 schedule = os.environ.get('SESAM_ENDPOINT2FILE_SCHEDULE') # seconds between each run
 
 headers = {'Authorization': "bearer " + jwt}
-protocol = "https://"
+protocol = "https://"  # FIXME: include protocol in 'NODE' env.var
 
-logging.basicConfig(filename='endpoint2file.log',level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)  # dump log to stdout
 logging.debug(datetime.datetime.now())
 logging.debug("Node instance: %s" % node)
 logging.debug("Endpoint     : %s" % endpoint)
@@ -49,28 +49,28 @@ def fetch_endpoint_stream(url, params):
     return result
 
 
-def dump_byte_stream_to_file(byte_stream, target_path, target_file):
+def dump_byte_stream_to_file(byte_stream, path, file):
     """Write byte stream to a file"""
 
     logging.debug("-> dump_byte_stream_to_file()")
-    logging.debug("target_path: %s" % target_path)
-    logging.debug("target_file: %s" % target_file)
-    logging.info(" --> %s%s" % (target_path, target_file))
+    logging.debug("target_path: %s" % path)
+    logging.debug("target_file: %s" % file)
+    logging.info(" --> %s%s" % (path, file))
 
     # make sure target path exists
-    if not os.path.exists(target_path):
-        os.mkdir(target_path)
+    if not os.path.exists(path):
+        os.mkdir(path)
 
     logging.debug("byte_stream: %s" % byte_stream)
 
     # write to file
-    with open(target_path + target_file, 'wb') as output:
+    with open(path + file, 'wb') as output:
         output.write(byte_stream)
 
     logging.debug("<- dump_byte_stream_to_file()")
 
 
-def endpoint_to_file(lines):
+def endpoint_to_file():
     """The main loop"""
 
     for line in lines.split(' '):
@@ -79,14 +79,13 @@ def endpoint_to_file(lines):
         # for railml exports, target file names must be prefixed with 'line'
         # and we currently only want segmented lines
         # FIXME: how can these in-params be made more generic?
-
         params = {'bane': line, 'segmented': 'true'}
         url = protocol + node + endpoint
 
-        # fetch xml stream
+        # fetch byte stream
         result = fetch_endpoint_stream(url, params)
 
-        # dump xml stream to disk
+        # dump byte stream to disk
         target_file = line + "-" + target_filename + "." + target_filename_ext
         dump_byte_stream_to_file(result.content, target_path, target_file)
 
@@ -102,5 +101,5 @@ while True:
     # - graceful exit
     # - integrate in sesam
     # - consider moving loop out to a wrapper service
-    endpoint_to_file(lines)
+    endpoint_to_file()
     time.sleep(int(schedule))
