@@ -14,16 +14,15 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 # fetch env vars
 jwt = os.environ.get('JWT')
-node = os.environ.get('NODE') # ex: "ac6f6566.sesam.cloud"
-lines = os.environ.get('BANENOR_LINES') # expects a space separated list of lines ("B01 B02 B03 ...")
-endpoint = os.environ.get('SESAM_ENDPOINT2FILE_ENDPOINT') # ex: "/api/publishers/railml/xml"
-target_path = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_PATH') # ex: "railml/"
-target_filename = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILENAME') # ex: "railml2.3nor"
-target_filename_ext = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILE_EXT') # ex: "xml"
-schedule = os.environ.get('SESAM_ENDPOINT2FILE_SCHEDULE') # seconds between each run
+node = os.environ.get('NODE')  # ex: "https://ac6f6566.sesam.cloud"
+lines = os.environ.get('BANENOR_LINES')  # expects a space separated list of lines ("B01 B02 B03 ...")
+endpoint = os.environ.get('SESAM_ENDPOINT2FILE_ENDPOINT')  # ex: "/api/publishers/railml/xml"
+target_path = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_PATH')  # ex: "railml/"
+target_filename = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILENAME')  # ex: "railml2.3nor"
+target_filename_ext = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILE_EXT')  # ex: "xml"
+schedule = os.environ.get('SESAM_ENDPOINT2FILE_SCHEDULE')  # seconds between each run
 
 headers = {'Authorization': "bearer " + jwt}
-protocol = "https://"  # FIXME: include protocol in 'NODE' env.var
 
 logging.basicConfig(level=logging.INFO)  # dump log to stdout
 logging.debug(datetime.datetime.now())
@@ -80,7 +79,7 @@ def endpoint_to_file():
         # and we currently only want segmented lines
         # FIXME: how can these in-params be made more generic?
         params = {'bane': line, 'segmented': 'true'}
-        url = protocol + node + endpoint
+        url = node + endpoint
 
         # fetch byte stream
         result = fetch_endpoint_stream(url, params)
