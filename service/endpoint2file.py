@@ -15,8 +15,8 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 # fetch env vars
 jwt = os.environ.get('JWT')
-node = os.environ.get('NODE')  # ex: "https://abcd1234.sesam.cloud"
-config_endpoint = os.environ.get('CONFIG_ENDPOINT')  # ex: "/api/publishers/config_endpoint/entities"
+node = os.environ.get('NODE')  # ex: "https://abcd1234.sesam.cloud/api"
+config_endpoint = os.environ.get('CONFIG_ENDPOINT')  # ex: "/publishers/config_endpoint/entities"
 schedule = os.environ.get('SCHEDULE')  # seconds between each run
 
 headers = {'Authorization': "bearer " + jwt}
