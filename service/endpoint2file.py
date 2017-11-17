@@ -5,6 +5,7 @@ import os
 import logging
 import datetime
 import time
+import json
 
 __author__ = "Geir Atle Hegsvold"
 
@@ -14,30 +15,63 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 # fetch env vars
 jwt = os.environ.get('JWT')
-node = os.environ.get('NODE')  # ex: "https://ac6f6566.sesam.cloud"
-lines = os.environ.get('BANENOR_LINES')  # expects a space separated list of lines ("B01 B02 B03 ...")
-endpoint = os.environ.get('SESAM_ENDPOINT2FILE_ENDPOINT')  # ex: "/api/publishers/railml/xml"
-target_path = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_PATH')  # ex: "railml/"
-target_filename = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILENAME')  # ex: "railml2.3nor"
-target_filename_ext = os.environ.get('SESAM_ENDPOINT2FILE_TARGET_FILE_EXT')  # ex: "xml"
-schedule = os.environ.get('SESAM_ENDPOINT2FILE_SCHEDULE')  # seconds between each run
+node = os.environ.get('NODE')  # ex: "https://abcd1234.sesam.cloud"
+config_endpoint = os.environ.get('CONFIG_ENDPOINT')  # ex: "/api/publishers/config_endpoint/entities"
+schedule = os.environ.get('SCHEDULE')  # seconds between each run
 
 headers = {'Authorization': "bearer " + jwt}
 
 logging.basicConfig(level=logging.INFO)  # dump log to stdout
+
 logging.debug(datetime.datetime.now())
-logging.debug("Node instance: %s" % node)
-logging.debug("Endpoint     : %s" % endpoint)
-logging.debug("Headers      : %s\n" % headers)
+logging.debug("Node instance  : %s" % node)
+logging.debug("Config endpoint: %s" % config_endpoint)
+logging.debug("Headers        : %s\n" % headers)
 
 
-def fetch_endpoint_stream(url, params):
+def endpoint_to_file(cfg):
+    """ This is where the magic happens """
+
+    logging.debug("-> endpoint_to_file()")
+
+    entities = json.loads(cfg)
+    logging.debug(entities)
+
+    # loop over all config entities
+    for entity in entities:
+        logging.debug("config entity: %s" % entity)
+
+        # extract relevant parameters
+        endpoint = entity["ENDPOINT"]
+        target_path = entity["TARGET_PATH"]
+        target_filename = entity["TARGET_FILENAME"]
+        target_file_ext = entity["TARGET_FILE_EXT"]
+
+        logging.debug("endpoint: %s" % endpoint)
+        logging.debug("target_path: %s" % target_path)
+        logging.debug("target_filename: %s" % target_filename)
+        logging.debug("target_file_ext: %s" % target_file_ext)
+
+        url = node + endpoint
+
+        logging.debug(url)
+
+        # fetch byte stream
+        result = fetch_endpoint_stream(url)
+        logging.debug("result: %s" % result.content)
+
+        # dump byte stream to disk
+        dump_byte_stream_to_file(result.content, target_path, target_filename + "." + target_file_ext)
+
+    logging.debug("<- endpoint_to_file()")
+
+
+def fetch_endpoint_stream(url, params=None):
     """Fetch byte stream from an endpoint"""
 
     logging.info(datetime.datetime.now())
     logging.debug("-> fetch_endpoint_stream()")
     logging.debug("url   : %s" % url)
-    logging.debug("params: %s" % params)
 
     result = requests.get(url, params=params, headers=headers)
 
@@ -49,7 +83,7 @@ def fetch_endpoint_stream(url, params):
 
 
 def dump_byte_stream_to_file(byte_stream, path, file):
-    """Write byte stream to a file"""
+    """Write byte stream to path/file"""
 
     logging.debug("-> dump_byte_stream_to_file()")
     logging.debug("target_path: %s" % path)
@@ -69,28 +103,6 @@ def dump_byte_stream_to_file(byte_stream, path, file):
     logging.debug("<- dump_byte_stream_to_file()")
 
 
-def endpoint_to_file():
-    """The main loop"""
-
-    for line in lines.split(' '):
-        logging.debug("-> main loop")
-
-        # for railml exports, target file names must be prefixed with 'line'
-        # and we currently only want segmented lines
-        # FIXME: how can these in-params be made more generic?
-        params = {'bane': line, 'segmented': 'true'}
-        url = node + endpoint
-
-        # fetch byte stream
-        result = fetch_endpoint_stream(url, params)
-
-        # dump byte stream to disk
-        target_file = line + "-" + target_filename + "." + target_filename_ext
-        dump_byte_stream_to_file(result.content, target_path, target_file)
-
-        logging.debug("<- main loop\n")
-
-
 # if __name__ == "__main__()":
 while True:
     # TODO:
@@ -99,6 +111,13 @@ while True:
     # - DONE: expose exported files from docker container to host file share (docker cmd)
     # - graceful exit
     # - integrate in sesam
-    # - consider moving loop out to a wrapper service
-    endpoint_to_file()
+    # - DONE: consider putting endpoint- & target path/filename-config in separate dataset to be read before executing this service;
+
+    # first fetch config
+    config = fetch_endpoint_stream(node + config_endpoint)
+
+    # then do stuff for each config entity
+    endpoint_to_file(config.content.decode('utf-8'))  # byte stream -> string
+
+    # sleep for a while
     time.sleep(int(schedule))

@@ -5,34 +5,46 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 ## Environment variables
 
-`BANENOR_LINES` - a space seprarated list of all lines to be exported (ex: "B01 B02...")
+`CONFIG_ENDPOINT` - relative url to the sesam node configuration endpoint
 
-`SESAM_ENDPOINT2FILE_ENDPOINT` - relative url to the sesam node endpoint
+`JWT` - JSON Web Token granting access to CONFIG_ENDPOINT and all ENDPOINTs defined in CONFIG_ENDPOINT
 
-`SESAM_ENDPOINT2FILE_SCHEDULE` - seconds between each run of the micro service
+`NODE` - base url to the sesam node instance (ex: "https://abcd1234.sesam.cloud")
 
-`SESAM_ENDPOINT2FILE_TARGET_FILENAME` - target filename
+`SCHEDULE` - seconds between each run of the micro service
 
-`SESAM_ENDPOINT2FILE_TARGET_FILE_EXT` - target file extension
-
-`SESAM_ENDPOINT2FILE_TARGET_PATH` - target path
-
-## Example System Config
+## Example Sesam System Config
 ```
 {
-  "_id": "xml-endpoint2file-service",
+  "_id": "endpoint2file-service",
   "type": "system:microservice",
   "docker": {
     "environment": {
-      "BANENOR_LINES": "B01 B02 B03",
-      "SESAM_ENDPOINT2FILE_ENDPOINT": "/api/publishers/railml/xml",
-      "SESAM_ENDPOINT2FILE_SCHEDULE": 1209600
-      "SESAM_ENDPOINT2FILE_TARGET_FILENAME": "railml2.3nor",
-      "SESAM_ENDPOINT2FILE_TARGET_FILE_EXT": "xml",
-      "SESAM_ENDPOINT2FILE_TARGET_PATH": "railml/"
+      "CONFIG_ENDPOINT": "/api/publishers/config_endpoint/entities",
+      "JWT": "$SERCRET(JWT)",
+      "NODE": "https://abcd1234.sesam.cloud",
+      "SCHEDULE": 1209600
     },
     "image": "sesamcommunity/endpoint2file:latest",
     "port": 5000
   }
 }
+```
+
+## Example CONFIG_ENDPOINT config
+```
+[
+    {
+      "ENDPOINT": "/api/publishers/railml/xml?bane=B01&segmented=true",
+      "TARGET_FILENAME": "B01-railml2.3nor",
+      "TARGET_FILE_EXT": "xml",
+      "TARGET_PATH": "railml/"
+    },
+    {
+      "ENDPOINT": "/api/publishers/railml/xml?bane=B02&&segmented=true",
+      "TARGET_FILENAME": "B02-railml2.3nor",
+      "TARGET_FILE_EXT": "xml",
+      "TARGET_PATH": "railml/"
+    }
+]
 ```
