@@ -18,15 +18,17 @@ jwt = os.environ.get('JWT')
 node = os.environ.get('NODE')  # ex: "https://abcd1234.sesam.cloud/api"
 config_endpoint = os.environ.get('CONFIG_ENDPOINT')  # ex: "/publishers/config_endpoint/entities"
 schedule = os.environ.get('SCHEDULE')  # seconds between each run
+#request_params = os.environ.get('PARAMS')
 
-headers = {'Authorization': "bearer " + jwt}
+headers = {'Authorization': 'bearer ' + jwt}
 
 logging.basicConfig(level=logging.INFO)  # dump log to stdout
 
 logging.debug(datetime.datetime.now())
 logging.debug("Node instance  : %s" % node)
 logging.debug("Config endpoint: %s" % config_endpoint)
-logging.debug("Headers        : %s\n" % headers)
+logging.debug("Headers        : %s" % headers)
+logging.debug("Schedule       : %s\n" % schedule)
 
 
 def endpoint_to_file(cfg):
@@ -72,8 +74,9 @@ def fetch_endpoint_stream(url, params=None):
     logging.info(datetime.datetime.now())
     logging.debug("-> fetch_endpoint_stream()")
     logging.debug("url   : %s" % url)
+#    logging.debug("params: %s" % request_params)
 
-    result = requests.get(url, params=params, headers=headers)
+    result = requests.get(url, params=params, headers=headers, verify=False)  # FIXME: not recommended to use verify=False
 
     logging.info(result.url)
     logging.debug("Response content: %s" % result.content)
@@ -103,21 +106,21 @@ def dump_byte_stream_to_file(byte_stream, path, file):
     logging.debug("<- dump_byte_stream_to_file()")
 
 
-# if __name__ == "__main__()":
-while True:
-    # TODO:
-    # - DONE: fetch env vars
-    # - DONE: keep alive in docker
-    # - DONE: expose exported files from docker container to host file share (docker cmd)
-    # - graceful exit
-    # - integrate in sesam
-    # - DONE: consider putting endpoint- & target path/filename-config in separate dataset to be read before executing this service;
+if __name__ == "__main__":
+    while True:
+        # TODO:
+        # - DONE: fetch env vars
+        # - DONE: keep alive in docker
+        # - DONE: expose exported files from docker container to host file share (docker cmd)
+        # - DONE: consider putting endpoint- & target path/filename-config in separate dataset to be read before executing this service;
+        # - DONE: integrate into sesam
+        # - graceful exit
 
-    # first fetch config
-    config = fetch_endpoint_stream(node + config_endpoint)
+        # first fetch config
+        config = fetch_endpoint_stream(node + config_endpoint)
 
-    # then do stuff for each config entity
-    endpoint_to_file(config.content.decode('utf-8'))  # byte stream -> string
+        # then do stuff for each config entity
+        endpoint_to_file(config.content.decode('utf-8'))  # byte stream -> string
 
-    # sleep for a while
-    time.sleep(int(schedule))
+        # sleep for a while
+        time.sleep(int(schedule))

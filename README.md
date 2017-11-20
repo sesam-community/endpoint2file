@@ -11,7 +11,7 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 `NODE` - base url to the sesam node instance api (ex: "https://abcd1234.sesam.cloud/api")
 
-`SCHEDULE` - seconds between each run of the micro service
+`SCHEDULE` - seconds between each run of the microservice
 
 ## Example Sesam System Config
 ```
@@ -34,17 +34,17 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 ## Example CONFIG_ENDPOINT config
 ```
 [
-    {
-      "ENDPOINT": "/publishers/railml/xml?bane=B01&segmented=true",
-      "TARGET_FILENAME": "B01-railml2.3nor",
-      "TARGET_FILE_EXT": "xml",
-      "TARGET_PATH": "railml/"
-    },
-    {
-      "ENDPOINT": "/publishers/railml/xml?bane=B02&&segmented=true",
-      "TARGET_FILENAME": "B02-railml2.3nor",
-      "TARGET_FILE_EXT": "xml",
-      "TARGET_PATH": "railml/"
-    }
+  {
+    "ENDPOINT": "/publishers/railml/xml?bane=B01&segmented=true",
+    "TARGET_FILENAME": "B01-railml2.3nor",
+    "TARGET_FILE_EXT": "xml",
+    "TARGET_PATH": "railml/"
+  },
+  {
+    "ENDPOINT": "/publishers/railml/xml?bane=B02&&segmented=true",
+    "TARGET_FILENAME": "B02-railml2.3nor",
+    "TARGET_FILE_EXT": "xml",
+    "TARGET_PATH": "railml/"
+  }
 ]
 ```
