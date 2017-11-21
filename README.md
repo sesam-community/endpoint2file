@@ -13,6 +13,16 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 `SCHEDULE` - seconds between each run of the microservice
 
+`SMB_IP` - Samba share IP
+
+`SMB_PWD` - Samba share password
+
+`SMB_SERVER` - Samba share server name
+
+`SMB_SHARE` - Samba share to write files into (ex: "agresso")
+
+`SMB_USER` - Samba share user name
+
 ## Example Sesam System Config
 ```
 {
@@ -21,12 +31,17 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
   "docker": {
     "environment": {
       "CONFIG_ENDPOINT": "/publishers/config_endpoint/entities",
-      "JWT": "$SERCRET(JWT)",
+      "JWT": "$SECRET(JWT)",
       "NODE": "https://abcd1234.sesam.cloud/api",
-      "SCHEDULE": 1209600
+      "SCHEDULE": 1209600,
+      "SMB_IP": "12.34.56.78",
+      "SMB_PWD": "$SECRET(endpoint2file-smb-pwd)",
+      "SMB_SERVER": "some-smb-server",
+      "SMB_SHARE": "some-smb-share",
+      "SMB_USER": "some-smb-user"
     },
     "image": "sesamcommunity/endpoint2file:latest",
-    "port": 5000
+    "port": 5555
   }
 }
 ```
