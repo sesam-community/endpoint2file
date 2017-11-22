@@ -1,0 +1,6 @@
+- DONE: fetch env vars
+- DONE: keep alive in docker
+- DONE: expose exported files from docker container to host file share (docker cmd)
+- DONE: consider putting endpoint- & target path/filename-config in separate dataset to be read before executing this service;
+- DONE: integrate into sesam
+- graceful exit
