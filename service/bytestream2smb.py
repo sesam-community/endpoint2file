@@ -2,34 +2,32 @@ from smb.SMBConnection import SMBConnection
 import io
 import logging
 
-# There will be some mechanism to capture userID, password, client_machine_name, server_name and server_ip
-# client_machine_name can be an arbitary ASCII string
-# server_name should match the remote machine name, or else the connection will be rejected
+# http://pysmb.readthedocs.io/en/latest/api/smb_SMBConnection.html
 
 
 def write(bytestream, smb_share, target_file, user, password, client_machine_name, server_name, server_ip):
     """ Writes bytestream to server_name/smb_share/target_file """
 
-    logging.info("-> bytestream2smb.write()")
+    logging.debug("-> bytestream2smb.write()")
 
-    logging.debug("smb_share: %s" % smb_share)
-    logging.debug("target_file: %s" % target_file)
-    logging.debug("user: %s" % user)
-    logging.debug("client_machine_name: %s" % client_machine_name)
-    logging.debug("server_name: %s" % server_name)
-    logging.debug("server_ip: %s" % server_ip)
+    logging.debug("   smb_share: %s" % smb_share)
+    logging.debug("   target_file: %s" % target_file)
+    logging.debug("   user: %s" % user)
+    logging.debug("   client_machine_name: %s" % client_machine_name)
+    logging.debug("   server_name: %s" % server_name)
+    logging.debug("   server_ip: %s" % server_ip)
 
     stream = io.BytesIO(bytestream)  # byte stream -> binary stream
 
     # open smb share connection
-    conn = SMBConnection(user, password, client_machine_name, server_name, use_ntlm_v2 = True)
+    conn = SMBConnection(user, password, client_machine_name, server_name, use_ntlm_v2=True)
     assert conn.connect(server_ip, 139)
 
     # write binary stream to smb share
     conn.storeFile(smb_share, target_file, stream)
     conn.close()
 
-    logging.info("<- bytestream2smb.write()")
+    logging.debug("<- bytestream2smb.write()")
 
 
 if __name__ == '__main__':

@@ -9,6 +9,8 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 `JWT` - JSON Web Token granting access to CONFIG_ENDPOINT and all ENDPOINTs defined in CONFIG_ENDPOINT
 
+`LOG_LEVEL` - Default 'INFO'. Ref: https://docs.python.org/3/howto/logging.html#logging-levels
+
 `NODE` - base url to the sesam node instance api (ex: "https://abcd1234.sesam.cloud/api")
 
 `SCHEDULE` - seconds between each run of the microservice
@@ -23,6 +25,9 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 `SMB_USER` - Samba share user name
 
+`VERIFY_CERT` - If set to 'True', SSL certificate is verified 
+
+
 ## Example Sesam System Config
 ```
 {
@@ -32,13 +37,15 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
     "environment": {
       "CONFIG_ENDPOINT": "/publishers/config_endpoint/entities",
       "JWT": "$SECRET(JWT)",
+      "LOG_LEVEL": "ERROR",   
       "NODE": "https://abcd1234.sesam.cloud/api",
       "SCHEDULE": 1209600,
       "SMB_IP": "12.34.56.78",
       "SMB_PWD": "$SECRET(endpoint2file-smb-pwd)",
       "SMB_SERVER": "some-smb-server",
       "SMB_SHARE": "some-smb-share",
-      "SMB_USER": "some-smb-user"
+      "SMB_USER": "some-smb-user",
+      "VERIFY_CERT": "False"
     },
     "image": "sesamcommunity/endpoint2file:latest",
     "port": 5555
