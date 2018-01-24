@@ -7,6 +7,7 @@ import datetime
 import time
 import json
 import bytestream2smb
+from flask import Flask, request, Response
 
 
 __author__ = "Geir Atle Hegsvold"
@@ -18,8 +19,8 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 # fetch env vars
 jwt = os.environ.get('JWT')
 node = os.environ.get('NODE')  # ex: "https://abcd1234.sesam.cloud/api"
-config_endpoint = os.environ.get('CONFIG_ENDPOINT')  # ex: "/publishers/config_endpoint/entities"
-schedule = os.environ.get('SCHEDULE')  # seconds between each run
+config_endpoint = os.environ.get('CONFIG_ENDPOINT')  # ex: "/publishers/config_endpoint/entities" - DEPRECATED in new version using Flask
+schedule = os.environ.get('SCHEDULE')  # seconds between each run  - DEPRECATED in new version using Flask
 verify_cert = (os.environ.get('VERIFY_CERT') == 'True')  # Only 'True' is considered True; everything else is False
 
 smb_ip = os.environ.get('SMB_IP')
@@ -29,6 +30,9 @@ smb_user = os.environ.get('SMB_USER')
 smb_pwd = os.environ.get('SMB_PWD')
 
 headers = {'Authorization': 'bearer ' + jwt}
+
+# initialize web service
+app = Flask(__name__)
 
 # set logging
 log_level = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO'))  # default log level = INFO
@@ -46,7 +50,8 @@ def endpoint_to_file(cfg):
 
     logging.debug("-> endpoint_to_file()")
 
-    entities = json.loads(cfg)
+#    entities = json.loads(cfg)
+    entities = cfg
 
     # loop over all config entities
     for entity in entities:
@@ -125,15 +130,43 @@ def dump_byte_stream_to_file(byte_stream, path, file):
     logging.debug("<- dump_byte_stream_to_file()")
 
 
-if __name__ == "__main__":
+@app.route('/config', methods=['POST'])
+def config():
+    # POST JSON formatted config to this endpoint
 
-    while True:
+    cfg = ""
+
+    # make sure we have a POST request ...
+    if request.method == 'POST':
+
+        # ... and JSON data
+        if request.headers['Content-Type'] == 'application/json':
+
+            cfg = request.json
+
+            logging.debug("cfg: %s" % cfg)
+
+            # then do stuff for each config entity
+#            endpoint_to_file(cfg.content.decode('utf-8'))  # byte stream -> string
+            endpoint_to_file(cfg)
+
+            return "JSON Message: " + json.dumps(request.json) + "\n"
+        else:
+            return "415 Unsupported Media Type"
+    else:
+        exit()
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', port=os.environ.get('port', 5555))
+
+#    while True:
 
         # first fetch config
-        config = fetch_endpoint_stream(node + config_endpoint)
+#        config = fetch_endpoint_stream(node + config_endpoint)
 
         # then do stuff for each config entity
-        endpoint_to_file(config.content.decode('utf-8'))  # byte stream -> string
+#        endpoint_to_file(config.content.decode('utf-8'))  # byte stream -> string
 
         # sleep for a while
-        time.sleep(int(schedule))
+#        time.sleep(int(schedule))
