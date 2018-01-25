@@ -19,8 +19,6 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 # fetch env vars
 jwt = os.environ.get('JWT')
 node = os.environ.get('NODE')  # ex: "https://abcd1234.sesam.cloud/api"
-config_endpoint = os.environ.get('CONFIG_ENDPOINT')  # ex: "/publishers/config_endpoint/entities" - DEPRECATED in new version using Flask
-schedule = os.environ.get('SCHEDULE')  # seconds between each run  - DEPRECATED in new version using Flask
 verify_cert = (os.environ.get('VERIFY_CERT') == 'True')  # Only 'True' is considered True; everything else is False
 
 smb_ip = os.environ.get('SMB_IP')
@@ -40,9 +38,7 @@ logging.basicConfig(level=log_level)  # dump log to stdout
 
 logging.debug(datetime.datetime.now())
 logging.debug("Node instance  : %s" % node)
-logging.debug("Config endpoint: %s" % config_endpoint)
 logging.debug("Headers        : %s" % headers)
-logging.debug("Schedule       : %s\n" % schedule)
 
 
 def endpoint_to_file(cfg):
@@ -87,7 +83,6 @@ def fetch_endpoint_stream(url, params=None):
     logging.info(datetime.datetime.now())
     logging.debug("-> fetch_endpoint_stream()")
     logging.debug("   verify_cert     : %s" % verify_cert)
-#    logging.debug("params: %s" % request_params)
     logging.info(url)
 
     result = requests.get(url, params=params, headers=headers, verify=verify_cert)
@@ -147,26 +142,12 @@ def config():
             logging.debug("cfg: %s" % cfg)
 
             # then do stuff for each config entity
-#            endpoint_to_file(cfg.content.decode('utf-8'))  # byte stream -> string
             endpoint_to_file(cfg)
 
             return "JSON Message: " + json.dumps(request.json) + "\n"
         else:
             return "415 Unsupported Media Type"
-    else:
-        exit()
 
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=os.environ.get('port', 5555))
-
-#    while True:
-
-        # first fetch config
-#        config = fetch_endpoint_stream(node + config_endpoint)
-
-        # then do stuff for each config entity
-#        endpoint_to_file(config.content.decode('utf-8'))  # byte stream -> string
-
-        # sleep for a while
-#        time.sleep(int(schedule))
