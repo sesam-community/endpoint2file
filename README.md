@@ -27,7 +27,7 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 The endpoint2file service expects to receive a JSON config at
 http://localhost:5555/config telling it where to fetch and dump the byte stream. 
-A JSON push sink with a url system can be used for this purpose.
+A JSON push sink can be used for this purpose.
 
 ## Example endpoint2file MicroService System Config
 ```
