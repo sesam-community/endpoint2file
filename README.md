@@ -5,15 +5,11 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 ## Environment variables
 
-`CONFIG_ENDPOINT` - relative url to the sesam node configuration endpoint
-
-`JWT` - JSON Web Token granting access to CONFIG_ENDPOINT and all ENDPOINTs defined in CONFIG_ENDPOINT
+`JWT` - JSON Web Token granting access to all ENDPOINTs defined in _config_endpoint2file_ (se example below)
 
 `LOG_LEVEL` - Default 'INFO'. Ref: https://docs.python.org/3/howto/logging.html#logging-levels
 
 `NODE` - base url to the sesam node instance api (ex: "https://abcd1234.sesam.cloud/api")
-
-`SCHEDULE` - seconds between each run of the microservice
 
 `SMB_IP` - Samba share IP
 
@@ -27,19 +23,22 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 `VERIFY_CERT` - If set to 'True', SSL certificate is verified 
 
+## Usage
 
-## Example Sesam System Config
+The endpoint2file service expects to receive a JSON config at
+http://localhost:5555/config telling it where to fetch and dump the byte stream. 
+A JSON push sink can be used for this purpose.
+
+## Example endpoint2file MicroService System Config
 ```
 {
   "_id": "endpoint2file-service",
   "type": "system:microservice",
   "docker": {
     "environment": {
-      "CONFIG_ENDPOINT": "/publishers/config_endpoint/entities",
       "JWT": "$SECRET(JWT)",
       "LOG_LEVEL": "ERROR",   
       "NODE": "https://abcd1234.sesam.cloud/api",
-      "SCHEDULE": 1209600,
       "SMB_IP": "12.34.56.78",
       "SMB_PWD": "$SECRET(endpoint2file-smb-pwd)",
       "SMB_SERVER": "some-smb-server",
@@ -53,7 +52,28 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 }
 ```
 
-## Example CONFIG_ENDPOINT config
+## Example JSON Push Sink
+```
+{
+  "_id": "config_endpoint2file-push-sink",
+  "type": "pipe",
+  "source": {
+    "type": "dataset",
+    "dataset": "config_endpoint2file"
+  },
+  "sink": {
+    "type": "json",
+    "system": "endpoint2file-service",
+    "url": "/config"
+  },
+  "pump": {
+    "cron_expression": "0 3 ? * *",
+    "rescan_cron_expression": "0 3 ? * *"
+  }
+}
+```
+
+## Example config_endpoint2file Entities
 ```
 [
   {
