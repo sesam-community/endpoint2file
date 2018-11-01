@@ -1,3 +1,3 @@
-requests==2.10.0
-pysmb==1.1.22
-Flask==0.12.2
+requests
+pysmb
+Flask
