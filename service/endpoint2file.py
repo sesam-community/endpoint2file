@@ -4,10 +4,10 @@ import requests
 import os
 import logging
 import datetime
-import time
 import json
 import bytestream2smb
-from flask import Flask, request, Response
+from flask import Flask, request
+import cherrypy
 
 
 __author__ = "Geir Atle Hegsvold"
@@ -34,24 +34,24 @@ app = Flask(__name__)
 
 # set logging
 log_level = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO'))  # default log level = INFO
-logging.basicConfig(level=log_level)  # dump log to stdout
+logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=log_level)
+logger = logging.getLogger("endpoint2file.py")
 
-logging.debug(datetime.datetime.now())
-logging.debug("Node instance  : %s" % node)
-logging.debug("Headers        : %s" % headers)
+logger.debug("Node instance  : %s" % node)
+logger.debug("Headers        : %s" % headers)
 
 
 def endpoint_to_file(cfg):
     """ This is where the magic happens """
 
-    logging.debug("-> endpoint_to_file()")
+    logger.debug("-> endpoint_to_file()")
 
 #    entities = json.loads(cfg)
     entities = cfg
 
     # loop over all config entities
     for entity in entities:
-        logging.debug("   config entity  : %s" % entity)
+        logger.debug("   config entity  : %s" % entity)
 
         # extract relevant parameters
         endpoint = entity["ENDPOINT"]
@@ -59,14 +59,14 @@ def endpoint_to_file(cfg):
         target_filename = entity["TARGET_FILENAME"]
         target_file_ext = entity["TARGET_FILE_EXT"]
 
-        logging.debug("   endpoint       : %s" % endpoint)
-        logging.debug("   target_path    : %s" % target_path)
-        logging.debug("   target_filename: %s" % target_filename)
-        logging.debug("   target_file_ext: %s" % target_file_ext)
+        logger.debug("   endpoint       : %s" % endpoint)
+        logger.debug("   target_path    : %s" % target_path)
+        logger.debug("   target_filename: %s" % target_filename)
+        logger.debug("   target_file_ext: %s" % target_file_ext)
 
         url = node + endpoint
 
-        logging.debug(url)
+        logger.debug("source url: %s" % url)
 
         # fetch byte stream
         result = fetch_endpoint_stream(url)
@@ -74,21 +74,21 @@ def endpoint_to_file(cfg):
         # dump byte stream to disk
         dump_byte_stream_to_file(result.content, target_path, target_filename + "." + target_file_ext)
 
-    logging.debug("<- endpoint_to_file()")
+    logger.debug("<- endpoint_to_file()")
 
 
 def fetch_endpoint_stream(url, params=None):
     """Fetch byte stream from an endpoint"""
 
-    logging.info(datetime.datetime.now())
-    logging.debug("-> fetch_endpoint_stream()")
-    logging.debug("   verify_cert     : %s" % verify_cert)
-    logging.info(url)
+    logger.info(datetime.datetime.now())
+    logger.debug("-> fetch_endpoint_stream()")
+    logger.debug("   verify_cert     : %s" % verify_cert)
+    logger.info("source url: %s" % url)
 
     result = requests.get(url, params=params, headers=headers, verify=verify_cert)
 
-    logging.debug("   Response content: %s" % result.content)
-    logging.debug("<- fetch_endpoint_stream()")
+#    logger.debug("   Response content: %s" % result.content)
+    logger.debug("<- fetch_endpoint_stream()")
 
     return result
 
@@ -96,40 +96,38 @@ def fetch_endpoint_stream(url, params=None):
 def dump_byte_stream_to_file(byte_stream, path, file):
     """Write byte stream to path/file"""
 
-    logging.debug("-> dump_byte_stream_to_file()")
-#    logging.debug("target_path: %s" % path)
-#    logging.debug("target_file: %s" % file)
-#    logging.info(" --> %s%s" % (path, file))
+    logger.debug("-> dump_byte_stream_to_file()")
+    logger.debug("target_path: %s" % path)
+    logger.debug("target_file: %s" % file)
+#    logger.info(" --> %s%s" % (path, file))
 
     # make sure target path exists
 #    if not os.path.exists(path):
 #        os.mkdir(path)
 
-#    logging.debug("byte_stream: %s" % byte_stream)
+#    logger.debug("byte_stream: %s" % byte_stream)
 
     # write to file
 #    with open(path + file, 'wb') as output:
 #        output.write(byte_stream)
 
-    logging.debug("   smb_server : %s" % smb_server)
-    logging.debug("   smb_ip     : %s" % smb_ip)
-    logging.debug("   smb_share  : %s" % smb_share)
-    logging.debug("   target_path: %s" % path)
-    logging.debug("   target_file: %s" % file)
-    logging.info("    --> %s (%s):/%s/%s%s" % (smb_server, smb_ip, smb_share, path, file))
-    logging.debug("   byte_stream: %s" % byte_stream)
+    logger.debug("  smb_server : %s" % smb_server)
+    logger.debug("  smb_ip     : %s" % smb_ip)
+    logger.debug("  smb_share  : %s" % smb_share)
+    logger.debug("  target_path: %s" % path)
+    logger.debug("  target_file: %s" % file)
+    logger.info("Writing %s (%s):/%s/%s%s" % (smb_server, smb_ip, smb_share, path, file))
+#    logger.debug("   byte_stream: %s" % byte_stream)
 
     # write to samba share
     bytestream2smb.write(byte_stream, smb_share, path + file, smb_user, smb_pwd, "endpoint2file", smb_server, smb_ip)
-
-    logging.debug("<- dump_byte_stream_to_file()")
+    logger.info("Done writing %s (%s):/%s/%s%s" % (smb_server, smb_ip, smb_share, path, file))
+    logger.debug("<- dump_byte_stream_to_file()")
 
 
 @app.route('/config', methods=['POST'])
 def config():
     # POST JSON formatted config to this endpoint
-
-    cfg = ""
 
     # make sure we have a POST request ...
     if request.method == 'POST':
@@ -139,7 +137,7 @@ def config():
 
             cfg = request.json
 
-            logging.debug("cfg: %s" % cfg)
+            logger.debug("cfg: %s" % cfg)
 
             # then do stuff for each config entity
             endpoint_to_file(cfg)
@@ -150,4 +148,18 @@ def config():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5555)  # port must match the port exposed in the Dockerfile
+#    app.run(debug=True, host='0.0.0.0', port=5555)  # port must match the port exposed in the Dockerfile
+    cherrypy.tree.graft(app, '/')
+
+    # Set the configuration of the web server to production mode
+    cherrypy.config.update({
+        'environment': 'production',
+        'engine.autoreload_on': False,
+        'log.screen': True,
+        'server.socket_port': 5555,  # port must match the port exposed in the Dockerfile
+        'server.socket_host': '0.0.0.0'
+    })
+
+    # Start the CherryPy WSGI web server
+    cherrypy.engine.start()
+    cherrypy.engine.block()
