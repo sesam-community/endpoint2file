@@ -3,3 +3,4 @@ __pycache__/
 railml/
 *.log
 run.sh
+venv/

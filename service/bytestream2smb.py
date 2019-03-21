@@ -8,14 +8,16 @@ import logging
 def write(bytestream, smb_share, target_file, user, password, client_machine_name, server_name, server_ip):
     """ Writes bytestream to server_name/smb_share/target_file """
 
-    logging.debug("-> bytestream2smb.write()")
+    logger = logging.getLogger("bytestream2smb.py")
 
-    logging.debug("   smb_share: %s" % smb_share)
-    logging.debug("   target_file: %s" % target_file)
-    logging.debug("   user: %s" % user)
-    logging.debug("   client_machine_name: %s" % client_machine_name)
-    logging.debug("   server_name: %s" % server_name)
-    logging.debug("   server_ip: %s" % server_ip)
+    logger.debug("-> bytestream2smb.write()")
+
+    logger.debug("   smb_share: %s" % smb_share)
+    logger.debug("   target_file: %s" % target_file)
+    logger.debug("   user: %s" % user)
+    logger.debug("   client_machine_name: %s" % client_machine_name)
+    logger.debug("   server_name: %s" % server_name)
+    logger.debug("   server_ip: %s" % server_ip)
 
     stream = io.BytesIO(bytestream)  # byte stream -> binary stream
 
@@ -27,7 +29,7 @@ def write(bytestream, smb_share, target_file, user, password, client_machine_nam
     conn.storeFile(smb_share, target_file, stream)
     conn.close()
 
-    logging.debug("<- bytestream2smb.write()")
+    logger.debug("<- bytestream2smb.write()")
 
 
 if __name__ == '__main__':
