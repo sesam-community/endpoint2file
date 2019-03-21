@@ -66,13 +66,15 @@ def endpoint_to_file(cfg):
 
         url = node + endpoint
 
-        logger.debug("source url: %s" % url)
+        logger.info("Fetching bytestream from %s" % url)
+        logger.info("Writing to %s (%s):%s/%s%s" % (smb_server, smb_ip, smb_share, target_path, target_filename))
 
         # fetch byte stream
         result = fetch_endpoint_stream(url)
 
         # dump byte stream to disk
         dump_byte_stream_to_file(result.content, target_path, target_filename + "." + target_file_ext)
+        logger.info("Done writing %s (%s):%s/%s%s\n" % (smb_server, smb_ip, smb_share, target_filename, target_filename))
 
     logger.debug("<- endpoint_to_file()")
 
@@ -83,7 +85,7 @@ def fetch_endpoint_stream(url, params=None):
     logger.info(datetime.datetime.now())
     logger.debug("-> fetch_endpoint_stream()")
     logger.debug("   verify_cert     : %s" % verify_cert)
-    logger.info("source url: %s" % url)
+    logger.debug("source url: %s" % url)
 
     result = requests.get(url, params=params, headers=headers, verify=verify_cert)
 
@@ -116,12 +118,10 @@ def dump_byte_stream_to_file(byte_stream, path, file):
     logger.debug("  smb_share  : %s" % smb_share)
     logger.debug("  target_path: %s" % path)
     logger.debug("  target_file: %s" % file)
-    logger.info("Writing %s (%s):/%s/%s%s" % (smb_server, smb_ip, smb_share, path, file))
 #    logger.debug("   byte_stream: %s" % byte_stream)
 
     # write to samba share
     bytestream2smb.write(byte_stream, smb_share, path + file, smb_user, smb_pwd, "endpoint2file", smb_server, smb_ip)
-    logger.info("Done writing %s (%s):/%s/%s%s" % (smb_server, smb_ip, smb_share, path, file))
     logger.debug("<- dump_byte_stream_to_file()")
 
 
