@@ -12,12 +12,12 @@ def write(bytestream, smb_share, target_file, user, password, client_machine_nam
 
     logger.debug("-> bytestream2smb.write()")
 
-    logger.debug("   smb_share: %s" % smb_share)
-    logger.debug("   target_file: %s" % target_file)
-    logger.debug("   user: %s" % user)
+    logger.debug("   smb_share          : %s" % smb_share)
+    logger.debug("   target_file        : %s" % target_file)
+    logger.debug("   user               : %s" % user)
     logger.debug("   client_machine_name: %s" % client_machine_name)
-    logger.debug("   server_name: %s" % server_name)
-    logger.debug("   server_ip: %s" % server_ip)
+    logger.debug("   server_name        : %s" % server_name)
+    logger.debug("   server_ip          : %s" % server_ip)
 
     stream = io.BytesIO(bytestream)  # byte stream -> binary stream
 
