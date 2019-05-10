@@ -1,7 +1,7 @@
 # endpoint2file (experimental)
 [![Build Status](https://travis-ci.org/sesam-community/endpoint2file.svg?branch=master)](https://travis-ci.org/sesam-community/endpoint2file)
 
-A micro-service for reading a byte stream from a sesam node endpoint and writing it to a file.
+endpoint2file is a micro service that reads a byte stream from a sesam node endpoint and writes it to a file.
 
 ## Environment variables
 
@@ -21,15 +21,17 @@ A micro-service for reading a byte stream from a sesam node endpoint and writing
 
 `SMB_USER` - Samba share user name
 
-`VERIFY_CERT` - If set to 'True', SSL certificate is verified 
+`VERIFY_CERT` - If set to 'True', SSL certificate is verified
 
 ## Usage
 
-The endpoint2file service expects to receive a JSON config at
-http://localhost:5555/config telling it where to fetch and dump the byte stream. 
+The endpoint2file service expects to receive a JSON list of configs at
+http://localhost:5555/config defining which endpoint to fetch the byte stream from
+and where to write it.
+
 A JSON push sink can be used for this purpose.
 
-## Example endpoint2file MicroService System Config
+## Example System Config
 ```
 {
   "_id": "endpoint2file-service",
@@ -37,7 +39,7 @@ A JSON push sink can be used for this purpose.
   "docker": {
     "environment": {
       "JWT": "$SECRET(JWT)",
-      "LOG_LEVEL": "ERROR",   
+      "LOG_LEVEL": "INFO",
       "NODE": "https://abcd1234.sesam.cloud/api",
       "SMB_IP": "12.34.56.78",
       "SMB_PWD": "$SECRET(endpoint2file-smb-pwd)",
@@ -65,10 +67,6 @@ A JSON push sink can be used for this purpose.
     "type": "json",
     "system": "endpoint2file-service",
     "url": "/config"
-  },
-  "pump": {
-    "cron_expression": "0 3 ? * *",
-    "rescan_cron_expression": "0 3 ? * *"
   }
 }
 ```
