@@ -134,8 +134,6 @@ def config():
             # then do stuff for each config entity
             endpoint_to_file(cfg)
 
-            logger.info("All done! Have a nice day!")
-
             return "JSON Message: " + json.dumps(request.json) + "\n"
         else:
             return "415 Unsupported Media Type"
