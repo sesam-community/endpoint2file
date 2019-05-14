@@ -3,17 +3,15 @@
 import requests
 import os
 import logging
-import datetime
 import json
 import bytestream2smb
 from flask import Flask, request
 import cherrypy
 
-
 __author__ = "Geir Atle Hegsvold"
 
 """
-A micro-service for reading a byte stream from a sesam node endpoint and writing it to a file.
+endpoint2file is a micro service that reads a byte stream from a sesam node endpoint and writes it to a file.
 """
 
 # fetch env vars
@@ -34,11 +32,11 @@ app = Flask(__name__)
 
 # set logging
 log_level = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO'))  # default log level = INFO
-logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', level=log_level)
+logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: %(message)s', level=log_level)
 logger = logging.getLogger("endpoint2file.py")
 
-logger.debug("Node instance  : %s" % node)
-logger.debug("Headers        : %s" % headers)
+logger.debug("Node instance: %s" % node)
+# logger.debug("Headers      : %s" % headers)
 
 
 def endpoint_to_file(cfg):
@@ -46,10 +44,11 @@ def endpoint_to_file(cfg):
 
     logger.debug("-> endpoint_to_file()")
 
-#    entities = json.loads(cfg)
     entities = cfg
 
-    # loop over all config entities
+    # loop over all config entities,
+    # fetch the byte stream for each ENDPOINT,
+    # and dump to TARGET_PATH/TARGET_FILENAME.TARGET_FILE_EXT
     for entity in entities:
         logger.debug("   config entity  : %s" % entity)
 
@@ -67,14 +66,18 @@ def endpoint_to_file(cfg):
         url = node + endpoint
 
         logger.info("Fetching bytestream from %s" % url)
-        logger.info("Writing to %s (%s):%s/%s%s" % (smb_server, smb_ip, smb_share, target_path, target_filename))
 
         # fetch byte stream
         result = fetch_endpoint_stream(url)
 
+        log_path = "%s (%s):%s/%s%s.%s" % (smb_server, smb_ip, smb_share, target_path, target_filename, target_file_ext)
+
+        logger.info("Writing to %s" % log_path)
+
         # dump byte stream to disk
         dump_byte_stream_to_file(result.content, target_path, target_filename + "." + target_file_ext)
-        logger.info("Done writing %s (%s):%s/%s%s\n" % (smb_server, smb_ip, smb_share, target_filename, target_filename))
+
+        logger.info("Done writing to %s\n" % log_path)
 
     logger.debug("<- endpoint_to_file()")
 
@@ -82,14 +85,12 @@ def endpoint_to_file(cfg):
 def fetch_endpoint_stream(url, params=None):
     """Fetch byte stream from an endpoint"""
 
-    logger.info(datetime.datetime.now())
     logger.debug("-> fetch_endpoint_stream()")
-    logger.debug("   verify_cert     : %s" % verify_cert)
-    logger.debug("source url: %s" % url)
+    logger.debug("   verify_cert    : %s" % verify_cert)
 
     result = requests.get(url, params=params, headers=headers, verify=verify_cert)
 
-#    logger.debug("   Response content: %s" % result.content)
+    logger.debug("   result.headers : %s" % result.headers)
     logger.debug("<- fetch_endpoint_stream()")
 
     return result
@@ -99,25 +100,13 @@ def dump_byte_stream_to_file(byte_stream, path, file):
     """Write byte stream to path/file"""
 
     logger.debug("-> dump_byte_stream_to_file()")
-    logger.debug("target_path: %s" % path)
-    logger.debug("target_file: %s" % file)
-#    logger.info(" --> %s%s" % (path, file))
-
-    # make sure target path exists
-#    if not os.path.exists(path):
-#        os.mkdir(path)
-
-#    logger.debug("byte_stream: %s" % byte_stream)
-
-    # write to file
-#    with open(path + file, 'wb') as output:
-#        output.write(byte_stream)
-
-    logger.debug("  smb_server : %s" % smb_server)
-    logger.debug("  smb_ip     : %s" % smb_ip)
-    logger.debug("  smb_share  : %s" % smb_share)
-    logger.debug("  target_path: %s" % path)
-    logger.debug("  target_file: %s" % file)
+    logger.debug("   target_path: %s" % path)
+    logger.debug("   target_file: %s" % file)
+    logger.debug("   smb_server : %s" % smb_server)
+    logger.debug("   smb_ip     : %s" % smb_ip)
+    logger.debug("   smb_share  : %s" % smb_share)
+    logger.debug("   target_path: %s" % path)
+    logger.debug("   target_file: %s" % file)
 #    logger.debug("   byte_stream: %s" % byte_stream)
 
     # write to samba share
@@ -129,6 +118,9 @@ def dump_byte_stream_to_file(byte_stream, path, file):
 def config():
     # POST JSON formatted config to this endpoint
 
+    logger.debug(request)
+    logger.debug("headers: \n%s" % request.headers)
+
     # make sure we have a POST request ...
     if request.method == 'POST':
 
@@ -137,7 +129,7 @@ def config():
 
             cfg = request.json
 
-            logger.debug("cfg: %s" % cfg)
+            logger.debug("config entities  : %s\n" % cfg)
 
             # then do stuff for each config entity
             endpoint_to_file(cfg)
@@ -147,8 +139,12 @@ def config():
             return "415 Unsupported Media Type"
 
 
+@app.route('/status')
+def status():
+    return "200 OK"
+
+
 if __name__ == "__main__":
-#    app.run(debug=True, host='0.0.0.0', port=5555)  # port must match the port exposed in the Dockerfile
     cherrypy.tree.graft(app, '/')
 
     # Set the configuration of the web server to production mode
